@@ -1,123 +1,74 @@
-class Asset {
-    String name;
-    double returnRate;
-    double volatility;
+public class RiskThresholdLookup {
 
-    Asset(String name, double returnRate, double volatility) {
-        this.name = name;
-        this.returnRate = returnRate;
-        this.volatility = volatility;
-    }
+    // ---------------- LINEAR SEARCH ----------------
+    public static void linearSearch(int[] risks, int target) {
+        int comparisons = 0;
+        boolean found = false;
 
-    @Override
-    public String toString() {
-        return name + ":" + returnRate + "% (Vol=" + volatility + ")";
-    }
-}
+        for (int i = 0; i < risks.length; i++) {
+            comparisons++;
 
-public class PortfolioReturnSorting {
-
-    // ---------------- MERGE SORT ASCENDING ----------------
-    public static void mergeSort(Asset[] arr, int left, int right) {
-        if (left < right) {
-            int mid = (left + right) / 2;
-
-            mergeSort(arr, left, mid);
-            mergeSort(arr, mid + 1, right);
-
-            merge(arr, left, mid, right);
-        }
-    }
-
-    public static void merge(Asset[] arr, int left, int mid, int right) {
-        int n1 = mid - left + 1;
-        int n2 = right - mid;
-
-        Asset[] L = new Asset[n1];
-        Asset[] R = new Asset[n2];
-
-        for (int i = 0; i < n1; i++)
-            L[i] = arr[left + i];
-
-        for (int j = 0; j < n2; j++)
-            R[j] = arr[mid + 1 + j];
-
-        int i = 0, j = 0, k = left;
-
-        while (i < n1 && j < n2) {
-            // Stable for ties
-            if (L[i].returnRate <= R[j].returnRate) {
-                arr[k++] = L[i++];
-            } else {
-                arr[k++] = R[j++];
+            if (risks[i] == target) {
+                System.out.println("Linear Search: Found at index " + i);
+                found = true;
+                break;
             }
         }
 
-        while (i < n1)
-            arr[k++] = L[i++];
-
-        while (j < n2)
-            arr[k++] = R[j++];
-    }
-
-    // ---------------- QUICK SORT DESCENDING ----------------
-    public static void quickSort(Asset[] arr, int low, int high) {
-        if (low < high) {
-            int pivotIndex = partition(arr, low, high);
-
-            quickSort(arr, low, pivotIndex - 1);
-            quickSort(arr, pivotIndex + 1, high);
+        if (!found) {
+            System.out.println("Linear Search: Not found");
         }
+
+        System.out.println("Comparisons = " + comparisons);
     }
 
-    public static int partition(Asset[] arr, int low, int high) {
-        Asset pivot = arr[high];
-        int i = low - 1;
+    // ---------------- BINARY FLOOR + CEILING ----------------
+    public static void binaryFloorCeiling(int[] risks, int target) {
+        int low = 0;
+        int high = risks.length - 1;
+        int comparisons = 0;
 
-        for (int j = low; j < high; j++) {
+        Integer floor = null;
+        Integer ceiling = null;
+        int insertionPoint = 0;
 
-            // Desc return, Asc volatility for ties
-            if (arr[j].returnRate > pivot.returnRate ||
-                    (arr[j].returnRate == pivot.returnRate &&
-                            arr[j].volatility < pivot.volatility)) {
+        while (low <= high) {
+            comparisons++;
 
-                i++;
+            int mid = (low + high) / 2;
 
-                Asset temp = arr[i];
-                arr[i] = arr[j];
-                arr[j] = temp;
+            if (risks[mid] == target) {
+                floor = risks[mid];
+                ceiling = risks[mid];
+                insertionPoint = mid;
+                break;
+            }
+            else if (risks[mid] < target) {
+                floor = risks[mid];
+                low = mid + 1;
+            }
+            else {
+                ceiling = risks[mid];
+                high = mid - 1;
             }
         }
 
-        Asset temp = arr[i + 1];
-        arr[i + 1] = arr[high];
-        arr[high] = temp;
-
-        return i + 1;
-    }
-
-    public static void printAssets(String title, Asset[] arr) {
-        System.out.println(title);
-        for (Asset a : arr) {
-            System.out.println(a);
+        if (floor == null || ceiling == null) {
+            insertionPoint = low;
         }
+
+        System.out.println("\nBinary Search:");
+        System.out.println("Floor = " + floor);
+        System.out.println("Ceiling = " + ceiling);
+        System.out.println("Insertion Point = " + insertionPoint);
+        System.out.println("Comparisons = " + comparisons);
     }
 
     public static void main(String[] args) {
-        Asset[] assets = {
-                new Asset("AAPL", 12, 5),
-                new Asset("TSLA", 8, 9),
-                new Asset("GOOG", 15, 4)
-        };
+        int[] risks = {10, 25, 50, 100};
+        int target = 30;
 
-        // Merge sort
-        Asset[] mergeArray = assets.clone();
-        mergeSort(mergeArray, 0, mergeArray.length - 1);
-        printAssets("Merge Sort (Ascending):", mergeArray);
-
-        // Quick sort
-        Asset[] quickArray = assets.clone();
-        quickSort(quickArray, 0, quickArray.length - 1);
-        printAssets("\nQuick Sort (Descending):", quickArray);
+        linearSearch(risks, target);
+        binaryFloorCeiling(risks, target);
     }
 }
